@@ -33,4 +33,24 @@ const getCommentsByPost = async (req, res) => {
   }
 };
 
-module.exports = { addComment, getCommentsByPost };
+const deleteComment = async (req, res) => {
+  try {
+    const comment = req.comment; 
+    const postId = comment.postId;
+
+    await comment.deleteOne();
+
+    const post = await Post.findById(postId);
+    if (post) {
+      post.commentsCount = Math.max(0, post.commentsCount - 1);
+      await post.save();
+    }
+
+    res.status(200).json({ message: "Comment deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting comment:", error);
+    res.status(500).json({ message: "Error deleting comment" });
+  }
+};
+
+module.exports = { addComment, getCommentsByPost, deleteComment };

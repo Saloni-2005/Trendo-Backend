@@ -1,2 +1,4 @@
 node_modules/
 .env
+CHAT_API_DOCUMENTATION.md
+POSTMAN_API_TESTS.md

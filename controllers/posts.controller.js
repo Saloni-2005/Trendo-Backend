@@ -3,7 +3,7 @@ const Post = require("../Models/posts.schema");
 const createPost = async (req, res) => {
   try {
     const { text, hashtags, visibility, media } = req.body;
-    const authorId = req.user.id || req.user._id;
+    const authorId = req.user.id;
 
     const newPost = new Post({
       authorId,

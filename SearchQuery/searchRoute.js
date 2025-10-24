@@ -1,10 +1,10 @@
 const express = require('express');
 const SearchRouter = express.Router();
-const verifyToken = require('../Middlewares/tokenPresence');
+const tokenPresence = require('../Middlewares/tokenPresence');
 const Post = require('../Models/posts.schema');
 const User = require('../Models/users.schema');
 
-SearchRouter.get('/search', verifyToken, async (req, res) => {
+SearchRouter.get('/', tokenPresence, async (req, res) => {
   const { q, type } = req.query;
   try {
     if (!q) return res.status(400).json({ message: "Query missing" });

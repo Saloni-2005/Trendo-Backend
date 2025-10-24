@@ -1,6 +1,5 @@
 const User = require("../Models/users.schema");
 
-// Get all users
 getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
@@ -9,7 +8,7 @@ getAllUsers = async (req, res) => {
     res.status(500).json({ message: "Error fetching users" });
   }
 };
-// Get user by ID
+
 getUserById = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -22,11 +21,13 @@ getUserById = async (req, res) => {
   }
 };
 
-// Update user by ID
+
 updateUser = async (req, res) => {
   try {
+    const userId = req.params.id;
+
     const updatedUser = await User.findByIdAndUpdate(
-      req.params.id,
+      userId,
       req.body,
       { new: true }
     );
@@ -38,10 +39,12 @@ updateUser = async (req, res) => {
     res.status(500).json({ message: "Error updating user" });
   }
 };
-// Delete user by ID
+
 deleteUser = async (req, res) => {
   try {
-    const deletedUser = await User.findByIdAndDelete(req.params.id);
+    const userId = req.params.id;
+
+    const deletedUser = await User.findByIdAndDelete(userId);
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -51,15 +54,24 @@ deleteUser = async (req, res) => {
   }
 };
 
-// Follow a user
 followUser = async (req, res) => {
   try {
     const userToFollow = await User.findById(req.params.id);
-    const currentUser = await User.findById(req.body.currentUserId);
+    const currentUserId = req.user.id;
 
-    if (!userToFollow || !currentUser) {
+    if (!userToFollow) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    if (userToFollow._id.toString() === currentUserId) {
+      return res.status(400).json({ message: "Cannot follow yourself" });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "Current user not found" });
+    }
+
     userToFollow.followersCount += 1;
     currentUser.followingCount += 1;
     await userToFollow.save();
@@ -69,17 +81,27 @@ followUser = async (req, res) => {
     res.status(500).json({ message: "Error following user" });
   }
 };
-// Unfollow a user
+
 unfollowUser = async (req, res) => {
   try {
     const userToUnfollow = await User.findById(req.params.id);
-    const currentUser = await User.findById(req.body.currentUserId);
+    const currentUserId = req.user.id;
 
-    if (!userToUnfollow || !currentUser) {
+    if (!userToUnfollow) {
       return res.status(404).json({ message: "User not found" });
     }
-    userToUnfollow.followersCount -= 1;
-    currentUser.followingCount -= 1;
+
+    if (userToUnfollow._id.toString() === currentUserId) {
+      return res.status(400).json({ message: "Cannot unfollow yourself" });
+    }
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      return res.status(404).json({ message: "Current user not found" });
+    }
+
+    userToUnfollow.followersCount = Math.max(0, userToUnfollow.followersCount - 1);
+    currentUser.followingCount = Math.max(0, currentUser.followingCount - 1);
     await userToUnfollow.save();
     await currentUser.save();
     res.status(200).json({ message: "User unfollowed successfully" });
@@ -87,10 +109,12 @@ unfollowUser = async (req, res) => {
     res.status(500).json({ message: "Error unfollowing user" });
   }
 };
-// Update user settings
+
 updateUserSettings = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const userId = req.params.id;
+
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
